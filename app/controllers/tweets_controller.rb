@@ -1,7 +1,8 @@
 class TweetsController < ApplicationController
     before_action :authenticate_user!
     before_action :set_tweet, only: [:show, :edit, :update, :destroy]
-    before_action :check_owner, only: [:edit, :destroy, :update]
+    before_action :check_edit, only: [:edit, :update]
+    before_action :check_destroy, only: [:edit, :update]
     # GET /tweets
   # GET /tweets.json
   def index
@@ -73,9 +74,18 @@ class TweetsController < ApplicationController
       @tweet = Tweet.find(params[:id])
     end
 
-    def check_owner
-      if current_user != @tweet.user
+    def check_edit
+      if !@tweet.can_edit?(current_user)
+      # if current_user != @tweet.user && !current_user.has_role?(:admin)
         flash[:alert] = "You cannot edit that tweet!"
+        redirect_to(request.referrer)
+      end
+    end
+
+    def check_destroy
+      if !@tweet.can_destroy?(current_user)
+      # if current_user != @tweet.user && !current_user.has_role?(:admin)
+        flash[:alert] = "You cannot delete that tweet!"
         redirect_to(request.referrer)
       end
     end
